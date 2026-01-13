@@ -1,0 +1,19 @@
+{
+  "enterpriseId": 8,
+  "customerId": "3341366000000066021",
+  "recurrenceName": "Monthly Subscription - Enterprise 8",
+  "currencyCode": "INR",
+  "recurrenceFrequency": "months",
+  "repeatEvery": 1,
+  "startDate": "2025-02-01",
+  "lineItems": [
+    {
+      "itemId": "3341366000000049002",
+      "rate": 25000.00,
+      "quantity": 1
+    }
+  ],
+  "notes": "Monthly recurring invoice for Enterprise 8",
+  "terms": "Payment due within 30 days"
+}
+

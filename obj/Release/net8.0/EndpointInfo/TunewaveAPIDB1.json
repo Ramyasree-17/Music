@@ -293,6 +293,107 @@
         }
       }
     },
+    "/api/users/address": {
+      "get": {
+        "tags": [
+          "User & Identity"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "User & Identity"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpsertRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpsertRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpsertRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "User & Identity"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpsertRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpsertRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpsertRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/users/address/update": {
+      "post": {
+        "tags": [
+          "User & Identity"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpsertRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpsertRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpsertRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/users/change-password": {
       "post": {
         "tags": [
@@ -381,6 +482,35 @@
     },
     "/api/users/update-profile": {
       "post": {
+        "tags": [
+          "User & Identity"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
         "tags": [
           "User & Identity"
         ],
@@ -1046,19 +1176,196 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/CreateReleaseDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateReleaseDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateReleaseDto"
+                "type": "object",
+                "properties": {
+                  "Title": {
+                    "type": "string"
+                  },
+                  "TitleVersion": {
+                    "type": "string"
+                  },
+                  "LabelId": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "Description": {
+                    "type": "string"
+                  },
+                  "CoverArtUrl": {
+                    "type": "string"
+                  },
+                  "CoverArtBase64": {
+                    "type": "string"
+                  },
+                  "CoverArtFile": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "ContributorsJson": {
+                    "type": "string"
+                  },
+                  "PrimaryGenre": {
+                    "type": "string"
+                  },
+                  "SecondaryGenre": {
+                    "type": "string"
+                  },
+                  "DigitalReleaseDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "OriginalReleaseDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "HasUPC": {
+                    "type": "boolean"
+                  },
+                  "UPCCode": {
+                    "type": "string"
+                  },
+                  "Contributors": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ContributorDto"
+                    }
+                  },
+                  "ContributorsGroup.PrimaryArtist": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "ContributorsGroup.FeaturedArtist": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "ContributorsGroup.Producer": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "ContributorsGroup.Director": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "ContributorsGroup.Composer": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "ContributorsGroup.Lyricist": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "DistributionOption.DistributionType": {
+                    "type": "string"
+                  },
+                  "DistributionOption.SelectedStoreIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "TrackIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "Title": {
+                  "style": "form"
+                },
+                "TitleVersion": {
+                  "style": "form"
+                },
+                "LabelId": {
+                  "style": "form"
+                },
+                "Description": {
+                  "style": "form"
+                },
+                "CoverArtUrl": {
+                  "style": "form"
+                },
+                "CoverArtBase64": {
+                  "style": "form"
+                },
+                "CoverArtFile": {
+                  "style": "form"
+                },
+                "ContributorsJson": {
+                  "style": "form"
+                },
+                "PrimaryGenre": {
+                  "style": "form"
+                },
+                "SecondaryGenre": {
+                  "style": "form"
+                },
+                "DigitalReleaseDate": {
+                  "style": "form"
+                },
+                "OriginalReleaseDate": {
+                  "style": "form"
+                },
+                "HasUPC": {
+                  "style": "form"
+                },
+                "UPCCode": {
+                  "style": "form"
+                },
+                "Contributors": {
+                  "style": "form"
+                },
+                "ContributorsGroup.PrimaryArtist": {
+                  "style": "form"
+                },
+                "ContributorsGroup.FeaturedArtist": {
+                  "style": "form"
+                },
+                "ContributorsGroup.Producer": {
+                  "style": "form"
+                },
+                "ContributorsGroup.Director": {
+                  "style": "form"
+                },
+                "ContributorsGroup.Composer": {
+                  "style": "form"
+                },
+                "ContributorsGroup.Lyricist": {
+                  "style": "form"
+                },
+                "DistributionOption.DistributionType": {
+                  "style": "form"
+                },
+                "DistributionOption.SelectedStoreIds": {
+                  "style": "form"
+                },
+                "TrackIds": {
+                  "style": "form"
+                }
               }
             }
           }
@@ -1119,19 +1426,173 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateReleaseDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateReleaseDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateReleaseDto"
+                "type": "object",
+                "properties": {
+                  "Title": {
+                    "type": "string"
+                  },
+                  "TitleVersion": {
+                    "type": "string"
+                  },
+                  "Description": {
+                    "type": "string"
+                  },
+                  "CoverArtUrl": {
+                    "type": "string"
+                  },
+                  "CoverArtBase64": {
+                    "type": "string"
+                  },
+                  "CoverArtFile": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "PrimaryGenre": {
+                    "type": "string"
+                  },
+                  "SecondaryGenre": {
+                    "type": "string"
+                  },
+                  "DigitalReleaseDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "OriginalReleaseDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "HasUPC": {
+                    "type": "boolean"
+                  },
+                  "UPCCode": {
+                    "type": "string"
+                  },
+                  "Contributors": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ContributorDto"
+                    }
+                  },
+                  "ContributorsGroup.PrimaryArtist": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "ContributorsGroup.FeaturedArtist": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "ContributorsGroup.Producer": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "ContributorsGroup.Director": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "ContributorsGroup.Composer": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "ContributorsGroup.Lyricist": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "DistributionOption.DistributionType": {
+                    "type": "string"
+                  },
+                  "DistributionOption.SelectedStoreIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "Title": {
+                  "style": "form"
+                },
+                "TitleVersion": {
+                  "style": "form"
+                },
+                "Description": {
+                  "style": "form"
+                },
+                "CoverArtUrl": {
+                  "style": "form"
+                },
+                "CoverArtBase64": {
+                  "style": "form"
+                },
+                "CoverArtFile": {
+                  "style": "form"
+                },
+                "PrimaryGenre": {
+                  "style": "form"
+                },
+                "SecondaryGenre": {
+                  "style": "form"
+                },
+                "DigitalReleaseDate": {
+                  "style": "form"
+                },
+                "OriginalReleaseDate": {
+                  "style": "form"
+                },
+                "HasUPC": {
+                  "style": "form"
+                },
+                "UPCCode": {
+                  "style": "form"
+                },
+                "Contributors": {
+                  "style": "form"
+                },
+                "ContributorsGroup.PrimaryArtist": {
+                  "style": "form"
+                },
+                "ContributorsGroup.FeaturedArtist": {
+                  "style": "form"
+                },
+                "ContributorsGroup.Producer": {
+                  "style": "form"
+                },
+                "ContributorsGroup.Director": {
+                  "style": "form"
+                },
+                "ContributorsGroup.Composer": {
+                  "style": "form"
+                },
+                "ContributorsGroup.Lyricist": {
+                  "style": "form"
+                },
+                "DistributionOption.DistributionType": {
+                  "style": "form"
+                },
+                "DistributionOption.SelectedStoreIds": {
+                  "style": "form"
+                }
               }
             }
           }
@@ -1157,6 +1618,48 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/releases/{releaseId}/status": {
+      "post": {
+        "tags": [
+          "Releases"
+        ],
+        "parameters": [
+          {
+            "name": "releaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStatusDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStatusDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStatusDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -3650,15 +4153,6 @@
         "tags": [
           "Branding"
         ],
-        "parameters": [
-          {
-            "name": "domainName",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -3695,11 +4189,260 @@
         }
       }
     },
+    "/api/branding/{brandingId}/domain": {
+      "get": {
+        "tags": [
+          "Branding"
+        ],
+        "parameters": [
+          {
+            "name": "brandingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "tags": [
           "Health"
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/mail/send": {
+      "post": {
+        "tags": [
+          "Mail"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMailRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMailRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMailRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/mail/send-legacy": {
+      "post": {
+        "tags": [
+          "Mail"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrevoSendMailRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrevoSendMailRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrevoSendMailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/teams": {
+      "post": {
+        "tags": [
+          "Teams"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/teams/member": {
+      "post": {
+        "tags": [
+          "Teams"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTeamMemberDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTeamMemberDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTeamMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/whatsapp": {
+      "get": {
+        "tags": [
+          "Whatsapp"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Whatsapp"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsappDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsappDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsappDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Whatsapp"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsappDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsappDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsappDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/whatsapp/update": {
+      "post": {
+        "tags": [
+          "Whatsapp"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsappDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsappDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsappDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -3751,6 +4494,60 @@
           },
           "isInternal": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AddTeamMemberDto": {
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "roleId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AddressUpsertRequestDto": {
+        "type": "object",
+        "properties": {
+          "addressLine1": {
+            "maxLength": 200,
+            "type": "string",
+            "nullable": true
+          },
+          "addressLine2": {
+            "maxLength": 200,
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "country": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "pincode": {
+            "maxLength": 10,
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -3821,6 +4618,36 @@
           "beneficiaryName": {
             "minLength": 1,
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BrevoSendMailRequest": {
+        "type": "object",
+        "properties": {
+          "fromEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "fromName": {
+            "type": "string",
+            "nullable": true
+          },
+          "toEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "toName": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string",
+            "nullable": true
+          },
+          "htmlContent": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -3940,28 +4767,13 @@
         "additionalProperties": false
       },
       "CreateArtistDto": {
-        "required": [
-          "stageName"
-        ],
         "type": "object",
         "properties": {
-          "stageName": {
-            "minLength": 1,
-            "type": "string"
-          },
           "artistName": {
             "type": "string",
             "nullable": true
           },
           "publicProfileName": {
-            "type": "string",
-            "nullable": true
-          },
-          "displayName": {
-            "type": "string",
-            "nullable": true
-          },
-          "primaryLanguage": {
             "type": "string",
             "nullable": true
           },
@@ -3974,10 +4786,6 @@
             "nullable": true
           },
           "bio": {
-            "type": "string",
-            "nullable": true
-          },
-          "imageUrl": {
             "type": "string",
             "nullable": true
           },
@@ -3995,80 +4803,21 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateReleaseDto": {
-        "required": [
-          "distributionOption",
-          "labelId",
-          "primaryGenre",
-          "title"
-        ],
-        "type": "object",
-        "properties": {
-          "title": {
-            "minLength": 1,
-            "type": "string"
           },
-          "titleVersion": {
+          "imageUrl": {
             "type": "string",
             "nullable": true
           },
-          "labelId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "description": {
+          "soundCloudUrl": {
             "type": "string",
             "nullable": true
           },
-          "coverArtUrl": {
+          "spotifyUrl": {
             "type": "string",
             "nullable": true
           },
-          "primaryGenre": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "secondaryGenre": {
+          "appleMusicUrl": {
             "type": "string",
-            "nullable": true
-          },
-          "digitalReleaseDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "originalReleaseDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "hasUPC": {
-            "type": "boolean"
-          },
-          "upcCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "contributors": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContributorDto"
-            },
-            "nullable": true
-          },
-          "distributionOption": {
-            "$ref": "#/components/schemas/DistributionOptionDto"
-          },
-          "trackIds": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
             "nullable": true
           }
         },
@@ -4142,6 +4891,25 @@
           },
           "mfaEnabled": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateTeamDto": {
+        "type": "object",
+        "properties": {
+          "teamName": {
+            "type": "string",
+            "nullable": true
+          },
+          "entityType": {
+            "type": "string",
+            "nullable": true
+          },
+          "entityId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -4253,6 +5021,9 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "contributors": {
+            "$ref": "#/components/schemas/TrackContributorsDto"
           }
         },
         "additionalProperties": false
@@ -4274,27 +5045,6 @@
           },
           "archiveData": {
             "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "DistributionOptionDto": {
-        "required": [
-          "distributionType"
-        ],
-        "type": "object",
-        "properties": {
-          "distributionType": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "selectedStoreIds": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
           }
         },
         "additionalProperties": false
@@ -4749,6 +5499,24 @@
         },
         "additionalProperties": false
       },
+      "SendMailRequestDto": {
+        "type": "object",
+        "properties": {
+          "toEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string",
+            "nullable": true
+          },
+          "htmlContent": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SendNotificationDto": {
         "required": [
           "channels",
@@ -4872,6 +5640,52 @@
         },
         "additionalProperties": false
       },
+      "TrackContributorsDto": {
+        "type": "object",
+        "properties": {
+          "primaryArtist": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "featuredArtist": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "producer": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "composer": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "lyricist": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateArtistDto": {
         "type": "object",
         "properties": {
@@ -4914,6 +5728,18 @@
           "dateOfBirth": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "soundCloudUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "spotifyUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "appleMusicUrl": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -5005,64 +5831,6 @@
         },
         "additionalProperties": false
       },
-      "UpdateReleaseDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "titleVersion": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "coverArtUrl": {
-            "type": "string",
-            "nullable": true
-          },
-          "primaryGenre": {
-            "type": "string",
-            "nullable": true
-          },
-          "secondaryGenre": {
-            "type": "string",
-            "nullable": true
-          },
-          "digitalReleaseDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "originalReleaseDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "hasUPC": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "upcCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "contributors": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContributorDto"
-            },
-            "nullable": true
-          },
-          "distributionOption": {
-            "$ref": "#/components/schemas/DistributionOptionDto"
-          }
-        },
-        "additionalProperties": false
-      },
       "UpdateSettingDto": {
         "required": [
           "value"
@@ -5080,6 +5848,19 @@
           "description": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateStatusDto": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "minLength": 1,
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -5179,6 +5960,26 @@
             "type": "string"
           },
           "code": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WhatsappDto": {
+        "required": [
+          "appKey",
+          "authKey"
+        ],
+        "type": "object",
+        "properties": {
+          "appKey": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "authKey": {
+            "maxLength": 200,
             "minLength": 1,
             "type": "string"
           }

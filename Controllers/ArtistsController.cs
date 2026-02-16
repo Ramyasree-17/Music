@@ -28,9 +28,7 @@ namespace TunewaveAPIDB1.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-
+                // All fields are optional - no ModelState validation needed
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
                 var role = User.FindFirst(ClaimTypes.Role)?.Value;
 
@@ -72,7 +70,7 @@ namespace TunewaveAPIDB1.Controllers
                     CommandType = CommandType.StoredProcedure
                 };
 
-                cmd.Parameters.AddWithValue("@ArtistName", dto.ArtistName);
+                cmd.Parameters.AddWithValue("@ArtistName", string.IsNullOrWhiteSpace(dto.ArtistName) ? DBNull.Value : dto.ArtistName);
                 cmd.Parameters.AddWithValue("@Bio", string.IsNullOrWhiteSpace(dto.Bio) ? DBNull.Value : dto.Bio);
                 cmd.Parameters.AddWithValue("@ImageUrl", string.IsNullOrWhiteSpace(dto.ImageUrl) ? DBNull.Value : dto.ImageUrl);
                 cmd.Parameters.AddWithValue("@DateOfBirth", (object?)dto.DateOfBirth ?? DBNull.Value);
@@ -81,6 +79,10 @@ namespace TunewaveAPIDB1.Controllers
                 cmd.Parameters.AddWithValue("@Email", string.IsNullOrWhiteSpace(dto.Email) ? DBNull.Value : dto.Email);
                 cmd.Parameters.AddWithValue("@LabelId", (object?)labelId ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@CreatedBy", userId);
+                cmd.Parameters.AddWithValue("@PublicProfileName", string.IsNullOrWhiteSpace(dto.PublicProfileName) ? DBNull.Value : dto.PublicProfileName);
+                cmd.Parameters.AddWithValue("@SoundCloudUrl", string.IsNullOrWhiteSpace(dto.SoundCloudUrl) ? DBNull.Value : dto.SoundCloudUrl);
+                cmd.Parameters.AddWithValue("@SpotifyUrl", string.IsNullOrWhiteSpace(dto.SpotifyUrl) ? DBNull.Value : dto.SpotifyUrl);
+                cmd.Parameters.AddWithValue("@AppleMusicUrl", string.IsNullOrWhiteSpace(dto.AppleMusicUrl) ? DBNull.Value : dto.AppleMusicUrl);
 
                 var result = await cmd.ExecuteScalarAsync();
 
@@ -133,7 +135,7 @@ namespace TunewaveAPIDB1.Controllers
                                 );
                                 SELECT SCOPE_IDENTITY();", conn);
 
-                            insertUserCmd.Parameters.AddWithValue("@FullName", (object?)dto.StageName ?? dto.Email);
+                            insertUserCmd.Parameters.AddWithValue("@FullName", string.IsNullOrWhiteSpace(dto.ArtistName) ? dto.Email : dto.ArtistName);
                             insertUserCmd.Parameters.AddWithValue("@Email", dto.Email);
 
                             var newUserIdObj = await insertUserCmd.ExecuteScalarAsync();
@@ -192,7 +194,11 @@ namespace TunewaveAPIDB1.Controllers
                     list.Add(new
                     {
                         artistId = reader["ArtistID"],
-                        artistName = reader["ArtistName"],
+                        artistName =
+    reader["ArtistName"] == DBNull.Value ||
+    string.IsNullOrWhiteSpace(reader["ArtistName"].ToString())
+        ? reader["PublicProfileName"]?.ToString()
+        : reader["ArtistName"].ToString(),
                         bio = reader["Bio"],
                         imageUrl = reader["ImageUrl"],
                         dateOfBirth = reader["DateOfBirth"],
@@ -249,7 +255,11 @@ namespace TunewaveAPIDB1.Controllers
                     var artist = new
                     {
                         artistId = reader["ArtistID"],
-                        artistName = reader["ArtistName"],
+                        artistName =
+    reader["ArtistName"] == DBNull.Value ||
+    string.IsNullOrWhiteSpace(reader["ArtistName"].ToString())
+        ? reader["PublicProfileName"]?.ToString()
+        : reader["ArtistName"].ToString(),
                         bio = reader["Bio"],
                         imageUrl = reader["ImageUrl"],
                         dateOfBirth = reader["DateOfBirth"],
@@ -296,6 +306,10 @@ namespace TunewaveAPIDB1.Controllers
                 cmd.Parameters.AddWithValue("@DateOfBirth", (object?)dto.DateOfBirth ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Country", string.IsNullOrWhiteSpace(dto.Country) ? DBNull.Value : dto.Country);
                 cmd.Parameters.AddWithValue("@Genre", string.IsNullOrWhiteSpace(dto.Genre) ? DBNull.Value : dto.Genre);
+                cmd.Parameters.AddWithValue("@PublicProfileName", string.IsNullOrWhiteSpace(dto.PublicProfileName) ? DBNull.Value : dto.PublicProfileName);
+                cmd.Parameters.AddWithValue("@SoundCloudUrl", string.IsNullOrWhiteSpace(dto.SoundCloudUrl) ? DBNull.Value : dto.SoundCloudUrl);
+                cmd.Parameters.AddWithValue("@SpotifyUrl", string.IsNullOrWhiteSpace(dto.SpotifyUrl) ? DBNull.Value : dto.SpotifyUrl);
+                cmd.Parameters.AddWithValue("@AppleMusicUrl", string.IsNullOrWhiteSpace(dto.AppleMusicUrl) ? DBNull.Value : dto.AppleMusicUrl);
 
                 await conn.OpenAsync();
                 var rows = await cmd.ExecuteNonQueryAsync();

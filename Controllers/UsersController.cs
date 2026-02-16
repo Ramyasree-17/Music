@@ -17,16 +17,19 @@ namespace TunewaveAPIDB1.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _repo;
+        private readonly IAddressRepository _addressRepo;
         private readonly PasswordService _passwordService;
         private readonly IConfiguration _cfg;
         private readonly string _connStr;
 
         public UsersController(
             IUserRepository repo,
+            IAddressRepository addressRepo,
             PasswordService passwordService,
             IConfiguration cfg)
         {
             _repo = repo;
+            _addressRepo = addressRepo;
             _passwordService = passwordService;
             _cfg = cfg;
             _connStr = cfg.GetConnectionString("DefaultConnection")!;
@@ -81,6 +84,13 @@ namespace TunewaveAPIDB1.Controllers
             {
                 return StatusCode(500, new { error = ex.Message });
             }
+        }
+
+        [HttpPut("update-profile")]
+        public async Task<IActionResult> UpdateProfilePut([FromBody] UpdateProfileRequestDto dto)
+        {
+            // Same implementation as POST
+            return await UpdateProfile(dto);
         }
 
         [HttpPost("change-password")]
@@ -211,6 +221,95 @@ namespace TunewaveAPIDB1.Controllers
             {
                 return StatusCode(500, new { error = ex.Message });
             }
+        }
+
+        // Address endpoints
+        [HttpGet("address")]
+        public async Task<IActionResult> GetAddress()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var address = await _addressRepo.GetByOwnerAsync(userId);
+
+                if (address == null)
+                    return NotFound(new { error = "Address not found" });
+
+                return Ok(address);
+            }
+            catch (SqlException ex)
+            {
+                return StatusCode(500, new { error = $"Database error: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("address")]
+        public async Task<IActionResult> CreateAddress([FromBody] AddressUpsertRequestDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var rows = await _addressRepo.UpsertAsync(userId, dto);
+
+                if (rows == 0)
+                    return StatusCode(500, new { error = "Failed to create address" });
+
+                await _repo.LogAuditAsync(userId, "Users.CreateAddress", "Address created", "User", userId.ToString(), GetClientIp());
+
+                var address = await _addressRepo.GetByOwnerAsync(userId);
+                return Ok(address);
+            }
+            catch (SqlException ex)
+            {
+                return StatusCode(500, new { error = $"Database error: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("address")]
+        public async Task<IActionResult> UpdateAddress([FromBody] AddressUpsertRequestDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var rows = await _addressRepo.UpsertAsync(userId, dto);
+
+                if (rows == 0)
+                    return StatusCode(500, new { error = "Failed to update address" });
+
+                await _repo.LogAuditAsync(userId, "Users.UpdateAddress", "Address updated", "User", userId.ToString(), GetClientIp());
+
+                var address = await _addressRepo.GetByOwnerAsync(userId);
+                return Ok(address);
+            }
+            catch (SqlException ex)
+            {
+                return StatusCode(500, new { error = $"Database error: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("address/update")]
+        public async Task<IActionResult> UpdateAddressPost([FromBody] AddressUpsertRequestDto dto)
+        {
+            // Same implementation as PUT
+            return await UpdateAddress(dto);
         }
 
         private string? GetClientIp()

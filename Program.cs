@@ -6,6 +6,7 @@ using TunewaveAPIDB1.Repositories;
 using TunewaveAPIDB1.Services;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +19,10 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Tunewave API", Version = "v1" });
 
-    // Order tags by section number (1-20) for Swagger UI
+    // Ensure all APIs are included
+    c.DocInclusionPredicate((docName, apiDesc) => true);
+
+    // Order tags by section number for Swagger UI
     c.TagActionsBy(api =>
     {
         var controllerName = api.ActionDescriptor.RouteValues["controller"];
@@ -45,7 +49,13 @@ builder.Services.AddSwaggerGen(c =>
             { "Admin", 17 },
             { "Jobs", 18 },
             { "Settings", 19 },
-            { "Audit", 20 }
+            { "Audit", 20 },
+            { "Branding", 21 },
+            { "Health", 22 },
+            { "Mail", 23 },
+            { "Teams", 24 },
+            { "Whatsapp", 25 },
+            { "ZohoInvoiceWebhook", 26 }
         };
 
         if (controllerName != null && sectionMap.TryGetValue(controllerName, out var sectionNum))
@@ -71,10 +81,26 @@ builder.Services.AddSwaggerGen(c =>
                 { 17, "Admin / SuperAdmin" },
                 { 18, "Jobs" },
                 { 19, "Settings" },
-                { 20, "Audit" }
+                { 20, "Audit" },
+                { 21, "Branding" },
+                { 22, "Health" },
+                { 23, "Mail" },
+                { 24, "Teams" },
+                { 25, "Whatsapp" },
+                { 26, "ZohoInvoiceWebhook" }
             };
 
             return new[] { sectionNames[sectionNum] };
+        }
+
+        // Fallback: Try to get GroupName from ApiExplorerSettings
+        var groupName = api.ActionDescriptor.EndpointMetadata
+            .OfType<Microsoft.AspNetCore.Mvc.ApiExplorerSettingsAttribute>()
+            .FirstOrDefault()?.GroupName;
+
+        if (!string.IsNullOrEmpty(groupName))
+        {
+            return new[] { groupName };
         }
 
         return new[] { controllerName ?? "Other" };
@@ -91,7 +117,9 @@ builder.Services.AddSwaggerGen(c =>
             { "Artists", 5 }, { "Releases", 6 }, { "Tracks", 7 }, { "Files", 8 },
             { "Qc", 9 }, { "Delivery", 10 }, { "Royalties", 11 }, { "Wallet", 12 },
             { "Billing", 13 }, { "Notifications", 14 }, { "Support", 15 }, { "Search", 16 },
-            { "Admin", 17 }, { "Jobs", 18 }, { "Settings", 19 }, { "Audit", 20 }
+            { "Admin", 17 }, { "Jobs", 18 }, { "Settings", 19 }, { "Audit", 20 },
+            { "Branding", 21 }, { "Health", 22 }, { "Mail", 23 }, { "Teams", 24 },
+            { "Whatsapp", 25 }, { "ZohoInvoiceWebhook", 26 }
         };
 
         if (controllerName != null && sectionMap.TryGetValue(controllerName, out var sectionNum))
@@ -118,6 +146,13 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
+
+    // Configure file upload support for multipart/form-data
+    c.MapType<IFormFile>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "binary"
+    });
 });
 
 // Custom services & repositories
@@ -141,6 +176,7 @@ builder.Services.AddScoped<IEnterpriseRepository, EnterpriseRepository>();
 builder.Services.AddScoped<ILabelRepository, LabelRepository>();
 builder.Services.AddScoped<IArtistRepository, ArtistRepository>();
 builder.Services.AddScoped<IReleaseRepository, ReleaseRepository>();
+builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 
 // ---- JWT Authentication ----
 var key = builder.Configuration["Jwt:Key"];

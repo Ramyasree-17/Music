@@ -551,18 +551,12 @@
   },
   {
     "ContainingType": "TunewaveAPIDB1.Controllers.BrandingController",
-    "Method": "GetBrandingByDomain",
+    "Method": "GetBranding",
     "RelativePath": "api/branding",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
-    "Parameters": [
-      {
-        "Name": "domainName",
-        "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
+    "Parameters": [],
     "ReturnTypes": [],
     "Tags": [
       "Branding"
@@ -579,6 +573,25 @@
       {
         "Name": "dto",
         "Type": "TunewaveAPIDB1.Models.UpdateEnterpriseBrandingDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [],
+    "Tags": [
+      "Branding"
+    ]
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.BrandingController",
+    "Method": "GetBrandingDomain",
+    "RelativePath": "api/branding/{brandingId}/domain",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "brandingId",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],
@@ -1323,6 +1336,38 @@
     ]
   },
   {
+    "ContainingType": "TunewaveAPIDB1.Controllers.MailController",
+    "Method": "SendMail",
+    "RelativePath": "api/mail/send",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "TunewaveAPIDB1.Models.SendMailRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.MailController",
+    "Method": "SendMailLegacy",
+    "RelativePath": "api/mail/send-legacy",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "TunewaveAPIDB1.Models.BrevoSendMailRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "TunewaveAPIDB1.Controllers.NotificationsController",
     "Method": "List",
     "RelativePath": "api/notifications",
@@ -1643,9 +1688,124 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "dto",
-        "Type": "TunewaveAPIDB1.Models.CreateReleaseDto",
-        "IsRequired": true
+        "Name": "Title",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "TitleVersion",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "LabelId",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Description",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "CoverArtUrl",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "CoverArtBase64",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "CoverArtFile",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsJson",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PrimaryGenre",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "SecondaryGenre",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "DigitalReleaseDate",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "OriginalReleaseDate",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasUPC",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "UPCCode",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Contributors",
+        "Type": "System.Collections.Generic.List\u00601[[TunewaveAPIDB1.Models.ContributorDto, TunewaveAPIDB1, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.PrimaryArtist",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.FeaturedArtist",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.Producer",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.Director",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.Composer",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.Lyricist",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "DistributionOption.DistributionType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "DistributionOption.SelectedStoreIds",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "TrackIds",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": [],
@@ -1699,9 +1859,109 @@
         "IsRequired": true
       },
       {
-        "Name": "dto",
-        "Type": "TunewaveAPIDB1.Models.UpdateReleaseDto",
-        "IsRequired": true
+        "Name": "Title",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "TitleVersion",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Description",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "CoverArtUrl",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "CoverArtBase64",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "CoverArtFile",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "PrimaryGenre",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "SecondaryGenre",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "DigitalReleaseDate",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "OriginalReleaseDate",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "HasUPC",
+        "Type": "System.Nullable\u00601[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "UPCCode",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Contributors",
+        "Type": "System.Collections.Generic.List\u00601[[TunewaveAPIDB1.Models.ContributorDto, TunewaveAPIDB1, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.PrimaryArtist",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.FeaturedArtist",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.Producer",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.Director",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.Composer",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ContributorsGroup.Lyricist",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "DistributionOption.DistributionType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "DistributionOption.SelectedStoreIds",
+        "Type": "System.Collections.Generic.List\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": [],
@@ -1720,6 +1980,30 @@
       {
         "Name": "releaseId",
         "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [],
+    "Tags": [
+      "Section 6 - Releases"
+    ]
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.ReleasesController",
+    "Method": "UpdateStatus",
+    "RelativePath": "api/releases/{releaseId}/status",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "releaseId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.UpdateStatusDto",
         "IsRequired": true
       }
     ],
@@ -2162,6 +2446,44 @@
     ]
   },
   {
+    "ContainingType": "TunewaveAPIDB1.Controllers.TeamsController",
+    "Method": "CreateTeam",
+    "RelativePath": "api/teams",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.CreateTeamDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [],
+    "Tags": [
+      "Teams"
+    ]
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.TeamsController",
+    "Method": "AddMember",
+    "RelativePath": "api/teams/member",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.AddTeamMemberDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [],
+    "Tags": [
+      "Teams"
+    ]
+  },
+  {
     "ContainingType": "TunewaveAPIDB1.Controllers.TracksController",
     "Method": "CreateTrack",
     "RelativePath": "api/tracks",
@@ -2297,6 +2619,76 @@
   },
   {
     "ContainingType": "TunewaveAPIDB1.Controllers.UsersController",
+    "Method": "GetAddress",
+    "RelativePath": "api/users/address",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [],
+    "Tags": [
+      "Section 2 - User \u0026 Identity"
+    ]
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.UsersController",
+    "Method": "CreateAddress",
+    "RelativePath": "api/users/address",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.AddressUpsertRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [],
+    "Tags": [
+      "Section 2 - User \u0026 Identity"
+    ]
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.UsersController",
+    "Method": "UpdateAddress",
+    "RelativePath": "api/users/address",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.AddressUpsertRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [],
+    "Tags": [
+      "Section 2 - User \u0026 Identity"
+    ]
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.UsersController",
+    "Method": "UpdateAddressPost",
+    "RelativePath": "api/users/address/update",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.AddressUpsertRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [],
+    "Tags": [
+      "Section 2 - User \u0026 Identity"
+    ]
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.UsersController",
     "Method": "ChangePassword",
     "RelativePath": "api/users/change-password",
     "HttpMethod": "POST",
@@ -2364,6 +2756,25 @@
     "Method": "UpdateProfile",
     "RelativePath": "api/users/update-profile",
     "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.UpdateProfileRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [],
+    "Tags": [
+      "Section 2 - User \u0026 Identity"
+    ]
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.UsersController",
+    "Method": "UpdateProfilePut",
+    "RelativePath": "api/users/update-profile",
+    "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -2536,6 +2947,64 @@
     "Tags": [
       "Section 12 - Wallet \u0026 Ledger"
     ]
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.WhatsappController",
+    "Method": "GetWhatsappConfig",
+    "RelativePath": "api/whatsapp",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.WhatsappController",
+    "Method": "CreateWhatsappConfig",
+    "RelativePath": "api/whatsapp",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.WhatsappDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.WhatsappController",
+    "Method": "UpdateWhatsappConfig",
+    "RelativePath": "api/whatsapp",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.WhatsappDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.WhatsappController",
+    "Method": "UpdateWhatsappConfig",
+    "RelativePath": "api/whatsapp/update",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.WhatsappDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "TunewaveAPIDB1.Controllers.ZohoInvoiceWebhookController",

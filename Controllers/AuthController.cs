@@ -90,12 +90,12 @@ namespace TunewaveAPIDB1.Controllers
             if (string.IsNullOrWhiteSpace(email))
                 return BadRequest(new { error = "Email is required" });
 
-            var (exists, name, em, role) = await _repo.CheckEmailAsync(email);
+            var (exists, name, em, role, brandingId) = await _repo.CheckEmailAsync(email);
 
             if (!exists)
                 return Ok(new { exists = false });
 
-            return Ok(new { exists = true, displayName = name, email = em, role });
+            return Ok(new { exists = true, displayName = name, email = em, role, brandingId });
         }
 
         [HttpPost("login")]

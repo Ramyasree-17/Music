@@ -3,7 +3,7 @@ using TunewaveAPIDB1.Models;
 
 public interface IAuthRepository
 {
-    Task<(bool exists, string? displayName, string? email, string? role)> CheckEmailAsync(string email);
+    Task<(bool exists, string? displayName, string? email, string? role, int? brandingId)> CheckEmailAsync(string email);
 
     Task<(int code, string message, int? userId, string? fullName,
         string? email, string? role, string? passwordHash)> LoginFullFlowAsync(string email);

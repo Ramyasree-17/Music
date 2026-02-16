@@ -20,29 +20,59 @@ namespace TunewaveAPIDB1.Repositories
         // ---------------------------------------------------------
         // CHECK EMAIL
         // ---------------------------------------------------------
-        public async Task<(bool exists, string? displayName, string? email, string? role)> CheckEmailAsync(string email)
+        public async Task<(bool exists, string? displayName, string? email, string? role, int? brandingId)> CheckEmailAsync(string email)
         {
             using var conn = new SqlConnection(_conn);
+            await conn.OpenAsync();
+
+            // First, check if user exists
             using var cmd = new SqlCommand("sp_Auth_CheckEmail", conn) { CommandType = CommandType.StoredProcedure };
             cmd.Parameters.AddWithValue("@Email", email);
 
-            await conn.OpenAsync();
-            using var rdr = await cmd.ExecuteReaderAsync();
+            string? displayName = null;
+            string? userEmail = null;
+            string? role = null;
 
-            if (await rdr.ReadAsync())
+            using (var rdr = await cmd.ExecuteReaderAsync())
             {
-                int existsFlag = Convert.ToInt32(rdr["ExistsFlag"]);
-                if (existsFlag == 0) return (false, null, null, null);
+                if (await rdr.ReadAsync())
+                {
+                    int existsFlag = Convert.ToInt32(rdr["ExistsFlag"]);
+                    if (existsFlag == 0) return (false, null, null, null, null);
 
-                return (
-                    true,
-                    rdr["DisplayName"]?.ToString(),
-                    rdr["Email"]?.ToString(),
-                    rdr["Role"]?.ToString()
-                );
+                    displayName = rdr["DisplayName"]?.ToString();
+                    userEmail = rdr["Email"]?.ToString();
+                    role = rdr["Role"]?.ToString();
+                }
+                else
+                {
+                    return (false, null, null, null, null);
+                }
             }
 
-            return (false, null, null, null);
+            // Now get brandingId from Branding table based on ContactEmail
+            int? brandingId = null;
+            using var brandingCmd = new SqlCommand(@"
+                SELECT TOP 1 Id 
+                FROM Branding 
+                WHERE ContactEmail = @Email 
+                  AND IsActive = 1
+                ORDER BY Id DESC", conn);
+            brandingCmd.Parameters.AddWithValue("@Email", email);
+            
+            using var brandingRdr = await brandingCmd.ExecuteReaderAsync();
+            if (await brandingRdr.ReadAsync())
+            {
+                brandingId = brandingRdr["Id"] != DBNull.Value ? Convert.ToInt32(brandingRdr["Id"]) : null;
+            }
+
+            return (
+                true,
+                displayName,
+                userEmail,
+                role,
+                brandingId
+            );
         }
 
         // ---------------------------------------------------------
@@ -89,9 +119,17 @@ namespace TunewaveAPIDB1.Repositories
             // Helper to safely get string value
             string SafeGetString(SqlDataReader r, string column)
             {
-                int idx = r.GetOrdinal(column);
-                if (r.IsDBNull(idx)) return null;
-                return r.GetString(idx);
+                try
+                {
+                    int idx = r.GetOrdinal(column);
+                    if (r.IsDBNull(idx)) return null;
+                    return r.GetString(idx);
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    // Column not found, return null
+                    return null;
+                }
             }
 
             return new UserRecord

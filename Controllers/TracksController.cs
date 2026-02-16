@@ -152,6 +152,112 @@ public class TracksController : ControllerBase
             cmd.Parameters.AddWithValue("@AudioUrl", DBNull.Value);
 
             var trackId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+
+            // Insert contributors into TrackContributors table
+            if (request.Contributors != null)
+            {
+                // Helper to get artist name from artist ID
+                async Task<string?> GetArtistNameAsync(int artistId)
+                {
+                    try
+                    {
+                        using var artistCmd = new SqlCommand("SELECT ArtistName FROM Artists WHERE ArtistId = @ArtistId", conn);
+                        artistCmd.Parameters.AddWithValue("@ArtistId", artistId);
+                        var result = await artistCmd.ExecuteScalarAsync();
+                        return result?.ToString();
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+
+                // Helper to insert contributor
+                async Task InsertContributorAsync(string contributorName, string role)
+                {
+                    try
+                    {
+                        using var contribCmd = new SqlCommand(@"
+                            INSERT INTO TrackContributors (TrackID, ContributorName, Role, CreatedAt)
+                            VALUES (@TrackId, @ContributorName, @Role, SYSUTCDATETIME())", conn);
+                        contribCmd.Parameters.AddWithValue("@TrackId", trackId);
+                        contribCmd.Parameters.AddWithValue("@ContributorName", contributorName);
+                        contribCmd.Parameters.AddWithValue("@Role", role);
+                        await contribCmd.ExecuteNonQueryAsync();
+                    }
+                    catch (SqlException ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to insert contributor {ContributorName} with role {Role} for track {TrackId}", contributorName, role, trackId);
+                        // Continue with other contributors even if one fails
+                    }
+                }
+
+                // Process Primary Artists
+                if (request.Contributors.PrimaryArtist != null && request.Contributors.PrimaryArtist.Any(id => id > 0))
+                {
+                    foreach (var artistId in request.Contributors.PrimaryArtist.Where(id => id > 0))
+                    {
+                        var artistName = await GetArtistNameAsync(artistId);
+                        if (!string.IsNullOrWhiteSpace(artistName))
+                        {
+                            await InsertContributorAsync(artistName, "Primary Artist");
+                        }
+                    }
+                }
+
+                // Process Featured Artists
+                if (request.Contributors.FeaturedArtist != null && request.Contributors.FeaturedArtist.Any(id => id > 0))
+                {
+                    foreach (var artistId in request.Contributors.FeaturedArtist.Where(id => id > 0))
+                    {
+                        var artistName = await GetArtistNameAsync(artistId);
+                        if (!string.IsNullOrWhiteSpace(artistName))
+                        {
+                            await InsertContributorAsync(artistName, "Featured Artist");
+                        }
+                    }
+                }
+
+                // Process Producers
+                if (request.Contributors.Producer != null && request.Contributors.Producer.Any(id => id > 0))
+                {
+                    foreach (var artistId in request.Contributors.Producer.Where(id => id > 0))
+                    {
+                        var artistName = await GetArtistNameAsync(artistId);
+                        if (!string.IsNullOrWhiteSpace(artistName))
+                        {
+                            await InsertContributorAsync(artistName, "Producer");
+                        }
+                    }
+                }
+
+                // Process Composers
+                if (request.Contributors.Composer != null && request.Contributors.Composer.Any(id => id > 0))
+                {
+                    foreach (var artistId in request.Contributors.Composer.Where(id => id > 0))
+                    {
+                        var artistName = await GetArtistNameAsync(artistId);
+                        if (!string.IsNullOrWhiteSpace(artistName))
+                        {
+                            await InsertContributorAsync(artistName, "Composer");
+                        }
+                    }
+                }
+
+                // Process Lyricists
+                if (request.Contributors.Lyricist != null && request.Contributors.Lyricist.Any(id => id > 0))
+                {
+                    foreach (var artistId in request.Contributors.Lyricist.Where(id => id > 0))
+                    {
+                        var artistName = await GetArtistNameAsync(artistId);
+                        if (!string.IsNullOrWhiteSpace(artistName))
+                        {
+                            await InsertContributorAsync(artistName, "Lyricist");
+                        }
+                    }
+                }
+            }
+
             return CreatedAtAction(nameof(GetTrack), new { trackId }, new { trackId });
         }
         catch (SqlException ex)
@@ -189,36 +295,126 @@ public class TracksController : ControllerBase
         if (!await reader.ReadAsync())
             return NotFound(new { error = "Track not found." });
 
-        // Safely read nullable columns
+        // Helper to safely read nullable columns
+        object? SafeRead(string column)
+        {
+            try
+            {
+                var ord = reader.GetOrdinal(column);
+                return reader.IsDBNull(ord) ? null : reader.GetValue(ord);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // Read all track data while reader is open
         int dbTrackId = reader.GetInt32(reader.GetOrdinal("TrackId"));
         int dbReleaseId = reader.GetInt32(reader.GetOrdinal("ReleaseId"));
         int dbTrackNumber = reader.GetInt32(reader.GetOrdinal("TrackNumber"));
-
-        object? SafeRead(string column)
-        {
-            var ord = reader.GetOrdinal(column);
-            return reader.IsDBNull(ord) ? null : reader.GetValue(ord);
-        }
-
+        string? title = SafeRead("Title")?.ToString();
+        string? trackVersion = SafeRead("TrackVersion")?.ToString();
+        int? durationSeconds = SafeRead("DurationSeconds") as int?;
+        bool? explicitFlag = SafeRead("ExplicitFlag") as bool?;
+        string? isrc = SafeRead("ISRC")?.ToString();
+        string? language = SafeRead("Language")?.ToString();
+        
         int? audioFileId = null;
         var audioOrd = reader.GetOrdinal("AudioFileId");
         if (!reader.IsDBNull(audioOrd))
             audioFileId = reader.GetInt32(audioOrd);
+
+        // Close the reader before querying contributors
+        await reader.CloseAsync();
+
+        // Get contributors in grouped format - TrackContributors table uses ContributorName, not ArtistID
+        var contributorsDict = new Dictionary<string, List<int>>
+        {
+            { "primaryArtist", new List<int>() },
+            { "featuredArtist", new List<int>() },
+            { "producer", new List<int>() },
+            { "composer", new List<int>() },
+            { "lyricist", new List<int>() }
+        };
+
+        try
+        {
+            // Check if TrackContributors table exists
+            var tableExistsCmd = new SqlCommand("SELECT OBJECT_ID('dbo.TrackContributors', 'U')", conn);
+            var tableExists = await tableExistsCmd.ExecuteScalarAsync();
+            
+            if (tableExists != DBNull.Value && tableExists != null)
+            {
+                // Query track contributors - join with Artists to get ArtistId from ContributorName
+                const string contributorsSql = @"
+                    SELECT tc.ContributorName, tc.Role, a.ArtistId
+                    FROM TrackContributors tc
+                    LEFT JOIN Artists a ON a.ArtistName = tc.ContributorName
+                    WHERE tc.TrackID = @TrackId;";
+                
+                using var contribCmd = new SqlCommand(contributorsSql, conn);
+                contribCmd.Parameters.AddWithValue("@TrackId", dbTrackId);
+                using var contribReader = await contribCmd.ExecuteReaderAsync();
+                
+                while (await contribReader.ReadAsync())
+                {
+                    var role = contribReader["Role"]?.ToString();
+                    var artistIdOrd = contribReader.GetOrdinal("ArtistId");
+                    int? artistId = contribReader.IsDBNull(artistIdOrd) ? null : contribReader.GetInt32(artistIdOrd);
+                    
+                    // Skip if we don't have an artist ID
+                    if (!artistId.HasValue || artistId.Value <= 0)
+                        continue;
+                    
+                    var roleKey = role?.ToLowerInvariant() switch
+                    {
+                        "primary artist" => "primaryArtist",
+                        "featured artist" => "featuredArtist",
+                        "producer" => "producer",
+                        "composer" => "composer",
+                        "lyricist" => "lyricist",
+                        "primaryartist" => "primaryArtist",
+                        "featuredartist" => "featuredArtist",
+                        _ => null
+                    };
+                    
+                    if (roleKey != null && contributorsDict.ContainsKey(roleKey))
+                    {
+                        contributorsDict[roleKey].Add(artistId.Value);
+                    }
+                }
+                await contribReader.CloseAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Ignore if TrackContributors table doesn't exist or other errors
+            _logger.LogWarning(ex, "Failed to fetch contributors for track {TrackId}", dbTrackId);
+        }
 
         var response = new
         {
             trackId = dbTrackId,
             releaseId = dbReleaseId,
             trackNumber = dbTrackNumber,
-            title = SafeRead("Title"),
-            durationSeconds = SafeRead("DurationSeconds"),
-            explicitFlag = SafeRead("ExplicitFlag"),
-            isrc = SafeRead("ISRC"),
-            language = SafeRead("Language"),
-            trackVersion = SafeRead("TrackVersion"),
+            title = title,
+            trackVersion = trackVersion,
+            durationSeconds = durationSeconds,
+            explicitFlag = explicitFlag,
+            isrc = isrc,
+            language = language,
             audioFileId,
             // alias for frontend convenience – same value as audioFileId
-            fileId = audioFileId
+            fileId = audioFileId,
+            contributors = new
+            {
+                primaryArtist = contributorsDict["primaryArtist"],
+                featuredArtist = contributorsDict["featuredArtist"],
+                producer = contributorsDict["producer"],
+                composer = contributorsDict["composer"],
+                lyricist = contributorsDict["lyricist"]
+            }
         };
 
         return Ok(response);

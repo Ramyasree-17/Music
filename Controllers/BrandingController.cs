@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using System.Data;
+using System.Security.Claims;
 using System.Text.Json;
 using TunewaveAPIDB1.Common;
 using TunewaveAPIDB1.Models;
@@ -10,6 +12,7 @@ namespace TunewaveAPIDB1.Controllers
     [ApiController]
     [Route("api/branding")]
     [Tags("Branding")]
+    [Authorize]
     public class BrandingController : ControllerBase
     {
         private readonly string _connStr;
@@ -19,11 +22,144 @@ namespace TunewaveAPIDB1.Controllers
             _connStr = cfg.GetConnectionString("DefaultConnection")!;
         }
 
+        private int GetUserId()
+        {
+            var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(value))
+                throw new InvalidOperationException("Authenticated user does not contain NameIdentifier claim.");
+            return int.Parse(value);
+        }
+
+        private string GetUserRole() => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+
+        // =========================================================
+        // 🔐 GET – Get Branding for Authenticated User
+        // =========================================================
+        [HttpGet]
+        public async Task<IActionResult> GetBranding()
+        {
+            var userId = GetUserId();
+            var role = GetUserRole();
+
+            string? ownerType = null;
+            int? ownerId = null;
+
+            using var conn = new SqlConnection(_connStr);
+            await conn.OpenAsync();
+
+            // Determine owner based on user role
+            if (string.Equals(role, "EnterpriseAdmin", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(role, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
+            {
+                // Get enterprise ID for the user
+                using var enterpriseCmd = new SqlCommand(@"
+                    SELECT TOP 1 EnterpriseID
+                    FROM EnterpriseUserRoles
+                    WHERE UserID = @UserId", conn);
+                enterpriseCmd.Parameters.AddWithValue("@UserId", userId);
+                var enterpriseId = await enterpriseCmd.ExecuteScalarAsync();
+                
+                if (enterpriseId != null && enterpriseId != DBNull.Value)
+                {
+                    ownerType = "Enterprise";
+                    ownerId = Convert.ToInt32(enterpriseId);
+                }
+            }
+            else if (string.Equals(role, "LabelAdmin", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(role, "LabelEditor", StringComparison.OrdinalIgnoreCase))
+            {
+                // Get label ID for the user
+                using var labelCmd = new SqlCommand(@"
+                    SELECT TOP 1 LabelID
+                    FROM UserLabelRoles
+                    WHERE UserID = @UserId", conn);
+                labelCmd.Parameters.AddWithValue("@UserId", userId);
+                var labelId = await labelCmd.ExecuteScalarAsync();
+                
+                if (labelId != null && labelId != DBNull.Value)
+                {
+                    ownerType = "Label";
+                    ownerId = Convert.ToInt32(labelId);
+                }
+            }
+
+            if (ownerType == null || !ownerId.HasValue)
+            {
+                return NotFound(new { error = "No branding found for your account. You must be assigned to an Enterprise or Label." });
+            }
+
+            // Get branding
+            using var cmd = new SqlCommand(@"
+                SELECT TOP 1
+                    Id AS BrandingId,
+                    OwnerType,
+                    OwnerId,
+                    DomainName,
+                    SiteName,
+                    SiteDescription,
+                    PrimaryColor,
+                    SecondaryColor,
+                    HeaderColor,
+                    SidebarColor,
+                    FooterColor,
+                    LogoUrl,
+                    FooterText,
+                    FooterLinksJson
+                FROM Branding
+                WHERE OwnerType = @OwnerType
+                  AND OwnerId = @OwnerId
+                  AND IsActive = 1", conn);
+
+            cmd.Parameters.AddWithValue("@OwnerType", ownerType);
+            cmd.Parameters.AddWithValue("@OwnerId", ownerId.Value);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return NotFound(new { error = "Branding not found for your account" });
+            }
+
+            return Ok(new
+            {
+                brandingId = reader["BrandingId"],
+                ownerType = reader["OwnerType"]?.ToString(),
+                ownerId = reader["OwnerId"],
+                domainName = reader["DomainName"]?.ToString(),
+
+                site = new
+                {
+                    name = reader["SiteName"]?.ToString() ?? BrandingDefaults.SiteName,
+                    description = reader["SiteDescription"]?.ToString() ?? BrandingDefaults.SiteDescription
+                },
+
+                colors = new
+                {
+                    primary = reader["PrimaryColor"]?.ToString() ?? BrandingDefaults.PrimaryColor,
+                    secondary = reader["SecondaryColor"]?.ToString() ?? BrandingDefaults.SecondaryColor,
+                    header = reader["HeaderColor"]?.ToString() ?? BrandingDefaults.HeaderColor,
+                    sidebar = reader["SidebarColor"]?.ToString() ?? BrandingDefaults.SidebarColor,
+                    footer = reader["FooterColor"]?.ToString() ?? BrandingDefaults.FooterColor
+                },
+
+                logoUrl = reader["LogoUrl"]?.ToString() ?? BrandingDefaults.DefaultLogo,
+
+                footer = new
+                {
+                    text = reader["FooterText"]?.ToString() ?? BrandingDefaults.FooterText,
+                    links = reader["FooterLinksJson"] != DBNull.Value && reader["FooterLinksJson"] != null
+                        ? JsonSerializer.Deserialize<object>(reader["FooterLinksJson"].ToString()!)
+                        : BrandingDefaults.FooterLinks
+                }
+            });
+        }
+
         // =========================================================
         // 🔓 PUBLIC GET – Branding by Domain (Enterprise / Label)
         // =========================================================
-        [HttpGet]
+        [HttpGet("domain")]
         [AllowAnonymous]
+        [ApiExplorerSettings(IgnoreApi = true)] // Hide from Swagger as it's a legacy endpoint
         public IActionResult GetBrandingByDomain([FromQuery] string domainName)
         {
             if (string.IsNullOrWhiteSpace(domainName))
@@ -364,6 +500,51 @@ namespace TunewaveAPIDB1.Controllers
             {
                 status = "success",
                 message = "Branding updated successfully"
+            });
+        }
+
+        // =========================================================
+        // 🔐 GET – Get Domain for Specific Branding ID
+        // =========================================================
+        [HttpGet("{brandingId}/domain")]
+        public async Task<IActionResult> GetBrandingDomain(int brandingId)
+        {
+            using var conn = new SqlConnection(_connStr);
+            await conn.OpenAsync();
+
+            using var cmd = new SqlCommand(@"
+                SELECT 
+                    Id AS BrandingId,
+                    DomainName,
+                    OwnerType,
+                    OwnerId,
+                    IsActive
+                FROM Branding
+                WHERE Id = @BrandingId", conn);
+
+            cmd.Parameters.AddWithValue("@BrandingId", brandingId);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return NotFound(new { error = "Branding not found" });
+            }
+
+            var domainName = reader["DomainName"]?.ToString();
+            var isActive = reader["IsActive"] != DBNull.Value && Convert.ToBoolean(reader["IsActive"]);
+
+            if (!isActive)
+            {
+                return BadRequest(new { error = "Branding is not active" });
+            }
+
+            return Ok(new
+            {
+                brandingId = reader["BrandingId"],
+                domainName = domainName,
+                ownerType = reader["OwnerType"]?.ToString(),
+                ownerId = reader["OwnerId"]
             });
         }
     }

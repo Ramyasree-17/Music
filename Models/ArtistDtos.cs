@@ -6,29 +6,9 @@ namespace TunewaveAPIDB1.Models
 {
     public class CreateArtistDto
     {
-        private string _stageName = string.Empty;
-
-        [Required]
-        public string StageName
-        {
-            get => _stageName;
-            set => _stageName = value ?? string.Empty;
-        }
-
-        /// <summary>
-        /// Legacy compatibility - maps to StageName
-        /// </summary>
-        public string ArtistName
-        {
-            get => StageName;
-            set => StageName = value ?? string.Empty;
-        }
+        public string? ArtistName { get; set; }
 
         public string? PublicProfileName { get; set; }
-
-        public string? DisplayName { get; set; }
-
-        public string? PrimaryLanguage { get; set; }
 
         public string? Country { get; set; }
 
@@ -36,15 +16,20 @@ namespace TunewaveAPIDB1.Models
 
         public string? Bio { get; set; }
 
-        public string? ImageUrl { get; set; }
-
         public DateTime? DateOfBirth { get; set; }
 
         [EmailAddress]
         public string? Email { get; set; }
 
-        // Optional label the artist belongs to (used by frontend)
         public int? LabelId { get; set; }
+
+        public string? ImageUrl { get; set; }
+
+        public string? SoundCloudUrl { get; set; }
+
+        public string? SpotifyUrl { get; set; }
+
+        public string? AppleMusicUrl { get; set; }
     }
 
     public class UpdateArtistDto
@@ -75,6 +60,12 @@ namespace TunewaveAPIDB1.Models
         public string? ImageUrl { get; set; }
 
         public DateTime? DateOfBirth { get; set; }
+
+        public string? SoundCloudUrl { get; set; }
+
+        public string? SpotifyUrl { get; set; }
+
+        public string? AppleMusicUrl { get; set; }
     }
 
     public class ArtistResponseDto

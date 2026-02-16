@@ -1,6 +1,25 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace TunewaveAPIDB1.Models;
+
+public class TrackContributorsDto
+{
+    [JsonPropertyName("primaryArtist")]
+    public List<int>? PrimaryArtist { get; set; }
+
+    [JsonPropertyName("featuredArtist")]
+    public List<int>? FeaturedArtist { get; set; }
+
+    [JsonPropertyName("producer")]
+    public List<int>? Producer { get; set; }
+
+    [JsonPropertyName("composer")]
+    public List<int>? Composer { get; set; }
+
+    [JsonPropertyName("lyricist")]
+    public List<int>? Lyricist { get; set; }
+}
 
 public class CreateTrackRequest
 {
@@ -30,6 +49,8 @@ public class CreateTrackRequest
     public int? PrimaryArtistId { get; set; }
 
     public int? AudioFileId { get; set; }
+
+    public TrackContributorsDto? Contributors { get; set; }
 }
 
 public class UpdateTrackRequest

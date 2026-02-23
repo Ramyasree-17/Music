@@ -173,6 +173,26 @@ namespace TunewaveAPIDB1.Controllers
                 }
             }
 
+            // 🔑 GET BRANDING ID FROM BRANDING TABLE
+            int? brandingId = null;
+            using (var conn = new SqlConnection(_cfg.GetConnectionString("DefaultConnection")))
+            {
+                await conn.OpenAsync();
+                using var brandingCmd = new SqlCommand(@"
+                    SELECT TOP 1 Id 
+                    FROM Branding 
+                    WHERE ContactEmail = @Email 
+                      AND IsActive = 1
+                    ORDER BY Id DESC", conn);
+                brandingCmd.Parameters.AddWithValue("@Email", req.Email);
+                
+                var brandingResult = await brandingCmd.ExecuteScalarAsync();
+                if (brandingResult != null && brandingResult != DBNull.Value)
+                {
+                    brandingId = Convert.ToInt32(brandingResult);
+                }
+            }
+
             // ==================================================
             // ✅ LOGIN SUCCESS
             // ==================================================
@@ -180,7 +200,8 @@ namespace TunewaveAPIDB1.Controllers
                 user,
                 enterpriseId: enterpriseId,
                 labelId: labelId,
-                domain: domain
+                domain: domain,
+                brandingId: brandingId
             );
 
             return Ok(new

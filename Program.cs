@@ -1,7 +1,12 @@
 ﻿using System.Text;
+using Hangfire;
+using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using TunewaveAPIDB1.Common;
+using TunewaveAPIDB1.Data;
 using TunewaveAPIDB1.Repositories;
 using TunewaveAPIDB1.Services;
 using Microsoft.AspNetCore.StaticFiles;
@@ -155,11 +160,33 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Entity Framework Core
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Hangfire Configuration
+var hangfireConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(hangfireConnection, new SqlServerStorageOptions
+    {
+        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+        QueuePollInterval = TimeSpan.Zero,
+        UseRecommendedIsolationLevel = true,
+        DisableGlobalLocks = true
+    }));
+
+builder.Services.AddHangfireServer();
+
 // Custom services & repositories
 builder.Services.AddSingleton<JwtService>();
 builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddSingleton<ResetTokenService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<BrevoService>();
 builder.Services.AddSingleton<CdnService>();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<GoogleDriveService>();
@@ -172,6 +199,7 @@ builder.Services.AddHostedService<AutoSuspendHostedService>();
 builder.Services.AddSingleton<ZohoBooksService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IEnterpriseRepository, EnterpriseRepository>();
 builder.Services.AddScoped<ILabelRepository, LabelRepository>();
 builder.Services.AddScoped<IArtistRepository, ArtistRepository>();
@@ -337,6 +365,13 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseCors("OpenCors");
 app.UseHttpsRedirection();
+
+// Hangfire Dashboard (optional - can be secured)
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireAuthorizationFilter() }
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 

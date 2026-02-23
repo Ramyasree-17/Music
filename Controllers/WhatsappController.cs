@@ -43,25 +43,13 @@ namespace TunewaveAPIDB1.Controllers
                 await using var reader = await cmd.ExecuteReaderAsync();
                 if (!await reader.ReadAsync())
                 {
-                    // Return a default response instead of 404 when configuration doesn't exist
-                    // This allows the frontend to know it needs to create a configuration
-                    return Ok(new WhatsappResponseDto
-                    {
-                        Id = 0,
-                        BrandingId = brandingId,
-                        AppKey = string.Empty,
-                        AuthKey = string.Empty,
-                        CreatedAt = DateTime.UtcNow
-                    });
+                    return NotFound(new { error = "Whatsapp config not found" });
                 }
 
-                return Ok(new WhatsappResponseDto
+                return Ok(new
                 {
-                    Id = Convert.ToInt32(reader["Id"]),
-                    BrandingId = Convert.ToInt32(reader["BrandingId"]),
-                    AppKey = reader["AppKey"].ToString()!,
-                    AuthKey = reader["AuthKey"].ToString()!,
-                    CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
+                    appKey = reader["AppKey"].ToString()!,
+                    authKey = reader["AuthKey"].ToString()!
                 });
             }
             catch (SqlException ex)
@@ -112,9 +100,7 @@ namespace TunewaveAPIDB1.Controllers
                 var newId = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
 
                 return Ok(new { 
-                    message = "WhatsApp configuration created successfully",
-                    id = newId,
-                    brandingId = brandingId
+                    message = "Whatsapp config created successfully"
                 });
             }
             catch (SqlException ex)
@@ -163,8 +149,7 @@ namespace TunewaveAPIDB1.Controllers
                     return NotFound(new { error = "WhatsApp configuration not found" });
 
                 return Ok(new { 
-                    message = "WhatsApp configuration updated successfully",
-                    brandingId = brandingId
+                    message = "Whatsapp config updated successfully"
                 });
             }
             catch (SqlException ex)

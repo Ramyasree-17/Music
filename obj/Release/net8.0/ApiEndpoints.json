@@ -551,40 +551,24 @@
   },
   {
     "ContainingType": "TunewaveAPIDB1.Controllers.BrandingController",
-    "Method": "GetBranding",
+    "Method": "GetByDomain",
     "RelativePath": "api/branding",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [],
-    "Tags": [
-      "Branding"
-    ]
-  },
-  {
-    "ContainingType": "TunewaveAPIDB1.Controllers.BrandingController",
-    "Method": "UpdateBranding",
-    "RelativePath": "api/branding",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
     "Parameters": [
       {
-        "Name": "dto",
-        "Type": "TunewaveAPIDB1.Models.UpdateEnterpriseBrandingDto",
-        "IsRequired": true
+        "Name": "domainName",
+        "Type": "System.String",
+        "IsRequired": false
       }
     ],
-    "ReturnTypes": [],
-    "Tags": [
-      "Branding"
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "TunewaveAPIDB1.Controllers.BrandingController",
-    "Method": "GetBrandingDomain",
-    "RelativePath": "api/branding/{brandingId}/domain",
+    "Method": "GetById",
+    "RelativePath": "api/branding/{brandingId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -595,10 +579,86 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [],
-    "Tags": [
-      "Branding"
-    ]
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.BrandingController",
+    "Method": "UpdateBranding",
+    "RelativePath": "api/branding/{brandingId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "brandingId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "TunewaveAPIDB1.Models.UpdateEnterpriseBrandingDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.BulkUploadController",
+    "Method": "UploadFile",
+    "RelativePath": "api/bulk-upload",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.BulkUploadController",
+    "Method": "GetUploadStatus",
+    "RelativePath": "api/bulk-upload/status/{uploadId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "uploadId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TunewaveAPIDB1.Controllers.BulkUploadController",
+    "Method": "GetValidationErrors",
+    "RelativePath": "api/bulk-upload/status/{uploadId}/errors",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "uploadId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "TunewaveAPIDB1.Controllers.DeliveryController",
@@ -2632,7 +2692,7 @@
   },
   {
     "ContainingType": "TunewaveAPIDB1.Controllers.UsersController",
-    "Method": "CreateAddress",
+    "Method": "AddAddress",
     "RelativePath": "api/users/address",
     "HttpMethod": "POST",
     "IsController": true,
@@ -2670,7 +2730,7 @@
   },
   {
     "ContainingType": "TunewaveAPIDB1.Controllers.UsersController",
-    "Method": "UpdateAddressPost",
+    "Method": "UpdateAddress",
     "RelativePath": "api/users/address/update",
     "HttpMethod": "POST",
     "IsController": true,
@@ -2755,7 +2815,7 @@
     "ContainingType": "TunewaveAPIDB1.Controllers.UsersController",
     "Method": "UpdateProfile",
     "RelativePath": "api/users/update-profile",
-    "HttpMethod": "POST",
+    "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -2772,9 +2832,9 @@
   },
   {
     "ContainingType": "TunewaveAPIDB1.Controllers.UsersController",
-    "Method": "UpdateProfilePut",
+    "Method": "UpdateProfile",
     "RelativePath": "api/users/update-profile",
-    "HttpMethod": "PUT",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [

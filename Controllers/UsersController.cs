@@ -35,18 +35,63 @@ namespace TunewaveAPIDB1.Controllers
             _connStr = cfg.GetConnectionString("DefaultConnection")!;
         }
 
+        // ================= GET CURRENT USER =================
+
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
         {
             try
             {
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var user = await _repo.GetUserProfileAsync(userId);
 
-                if (user == null)
+                using var conn = new SqlConnection(_connStr);
+                await conn.OpenAsync();
+
+                using var cmd = new SqlCommand(@"
+                    SELECT TOP 1
+                        UserID,
+                        FullName,
+                        Email,
+                        Mobile,
+                        CountryCode,
+                        Gender,
+                        DateOfBirth,
+                        Role,
+                        Status
+                    FROM Users
+                    WHERE UserID = @UserId", conn);
+
+                cmd.Parameters.AddWithValue("@UserId", userId);
+
+                using var reader = await cmd.ExecuteReaderAsync(CommandBehavior.SingleRow);
+                if (!await reader.ReadAsync())
                     return NotFound(new { error = "User not found" });
 
-                return Ok(user);
+                object? GetNullable(string column)
+                {
+                    try
+                    {
+                        var idx = reader.GetOrdinal(column);
+                        return reader.IsDBNull(idx) ? null : reader.GetValue(idx);
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+
+                return Ok(new
+                {
+                    id = Convert.ToInt32(reader["UserID"]),
+                    fullName = GetNullable("FullName")?.ToString(),
+                    email = GetNullable("Email")?.ToString(),
+                    mobile = GetNullable("Mobile")?.ToString(),
+                    countryCode = GetNullable("CountryCode")?.ToString(),
+                    gender = GetNullable("Gender")?.ToString(),
+                    dateOfBirth = GetNullable("DateOfBirth"),
+                    role = GetNullable("Role")?.ToString(),
+                    status = GetNullable("Status")?.ToString()
+                });
             }
             catch (SqlException ex)
             {
@@ -58,7 +103,10 @@ namespace TunewaveAPIDB1.Controllers
             }
         }
 
-        [HttpPost("update-profile")]
+        // ================= UPDATE PROFILE =================
+
+        [HttpPut("update-profile")]
+        [HttpPost("update-profile")] // Production fallback
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequestDto dto)
         {
             try
@@ -72,13 +120,10 @@ namespace TunewaveAPIDB1.Controllers
                 if (!success)
                     return NotFound(new { error = "User not found" });
 
-                await _repo.LogAuditAsync(userId, "Users.UpdateProfile", "Profile updated", "User", userId.ToString(), GetClientIp());
+                await _repo.LogAuditAsync(userId, "Users.UpdateProfile",
+                    "Profile updated", "User", userId.ToString(), GetClientIp());
 
                 return Ok(new { message = "Profile updated successfully" });
-            }
-            catch (SqlException ex)
-            {
-                return StatusCode(500, new { error = $"Database error: {ex.Message}" });
             }
             catch (Exception ex)
             {
@@ -86,12 +131,91 @@ namespace TunewaveAPIDB1.Controllers
             }
         }
 
-        [HttpPut("update-profile")]
-        public async Task<IActionResult> UpdateProfilePut([FromBody] UpdateProfileRequestDto dto)
+        // ================= ADDRESS =================
+
+        [HttpGet("address")]
+        public async Task<IActionResult> GetAddress()
         {
-            // Same implementation as POST
-            return await UpdateProfile(dto);
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var address = await _addressRepo.GetByOwnerAsync(userId);
+
+                if (address == null)
+                    return NotFound(new { error = "Address not found" });
+
+                return Ok(new
+                {
+                    address.AddressLine1,
+                    address.AddressLine2,
+                    address.City,
+                    address.State,
+                    address.Country,
+                    address.Pincode
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
+
+        [HttpPost("address")]
+        public async Task<IActionResult> AddAddress([FromBody] AddressUpsertRequestDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+                var exists = await _addressRepo.ExistsAsync(userId);
+                if (exists)
+                    return Conflict(new { error = "Address already exists. Use update." });
+
+                var rows = await _addressRepo.UpsertAsync(userId, dto);
+
+                await _repo.LogAuditAsync(userId, "Users.AddAddress",
+                    "Address added", "User", userId.ToString(), GetClientIp());
+
+                return Ok(new { message = "Address added successfully", rowsAffected = rows });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("address")]
+        [HttpPost("address/update")] // Production-safe fallback
+        public async Task<IActionResult> UpdateAddress([FromBody] AddressUpsertRequestDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+                var exists = await _addressRepo.ExistsAsync(userId);
+                if (!exists)
+                    return NotFound(new { error = "Address not found" });
+
+                var rows = await _addressRepo.UpsertAsync(userId, dto);
+
+                await _repo.LogAuditAsync(userId, "Users.UpdateAddress",
+                    "Address updated", "User", userId.ToString(), GetClientIp());
+
+                return Ok(new { message = "Address updated successfully", rowsAffected = rows });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // ================= CHANGE PASSWORD =================
 
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto dto)
@@ -101,45 +225,17 @@ namespace TunewaveAPIDB1.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                if (!string.IsNullOrWhiteSpace(dto.ConfirmPassword) &&
-                    !string.Equals(dto.NewPassword, dto.ConfirmPassword, StringComparison.Ordinal))
-                    return BadRequest(new { error = "New password and confirm password do not match" });
+                if (dto.NewPassword != dto.ConfirmPassword)
+                    return BadRequest(new { error = "Passwords do not match" });
 
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-                // Get current password hash
-                string currentPasswordHash;
-                using (var conn = new SqlConnection(_connStr))
-                {
-                    await conn.OpenAsync();
-                    using var cmd = new SqlCommand("SELECT PasswordHash FROM Users WHERE UserID = @UserId", conn);
-                    cmd.Parameters.AddWithValue("@UserId", userId);
-                    var result = await cmd.ExecuteScalarAsync();
-                    if (result == null)
-                        return NotFound(new { error = "User not found" });
-                    currentPasswordHash = result.ToString()!;
-                }
-
-                // Verify current password
-                if (!_passwordService.Verify(dto.OldPassword, currentPasswordHash))
-                    return Unauthorized(new { error = "Current password is incorrect" });
-
-                // Hash new password
-                var newPasswordHash = _passwordService.Hash(dto.NewPassword);
-
-                // Update password
-                var success = await _repo.ChangePasswordAsync(userId, currentPasswordHash, newPasswordHash);
+                var success = await _repo.ChangePasswordAsync(userId, dto.OldPassword, dto.NewPassword);
 
                 if (!success)
-                    return StatusCode(500, new { error = "Failed to update password" });
-
-                await _repo.LogAuditAsync(userId, "Users.ChangePassword", "Password changed", "User", userId.ToString(), GetClientIp());
+                    return Unauthorized(new { error = "Invalid current password" });
 
                 return Ok(new { message = "Password changed successfully" });
-            }
-            catch (SqlException ex)
-            {
-                return StatusCode(500, new { error = $"Database error: {ex.Message}" });
             }
             catch (Exception ex)
             {
@@ -147,7 +243,12 @@ namespace TunewaveAPIDB1.Controllers
             }
         }
 
-        [HttpGet("entities")]
+        // ================= HELPER =================
+
+       
+
+
+[HttpGet("entities")]
         public async Task<IActionResult> GetEntities()
         {
             try
@@ -223,99 +324,9 @@ namespace TunewaveAPIDB1.Controllers
             }
         }
 
-        // Address endpoints
-        [HttpGet("address")]
-        public async Task<IActionResult> GetAddress()
-        {
-            try
-            {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var address = await _addressRepo.GetByOwnerAsync(userId);
-
-                if (address == null)
-                    return NotFound(new { error = "Address not found" });
-
-                return Ok(address);
-            }
-            catch (SqlException ex)
-            {
-                return StatusCode(500, new { error = $"Database error: {ex.Message}" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
-        }
-
-        [HttpPost("address")]
-        public async Task<IActionResult> CreateAddress([FromBody] AddressUpsertRequestDto dto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var rows = await _addressRepo.UpsertAsync(userId, dto);
-
-                if (rows == 0)
-                    return StatusCode(500, new { error = "Failed to create address" });
-
-                await _repo.LogAuditAsync(userId, "Users.CreateAddress", "Address created", "User", userId.ToString(), GetClientIp());
-
-                var address = await _addressRepo.GetByOwnerAsync(userId);
-                return Ok(address);
-            }
-            catch (SqlException ex)
-            {
-                return StatusCode(500, new { error = $"Database error: {ex.Message}" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
-        }
-
-        [HttpPut("address")]
-        public async Task<IActionResult> UpdateAddress([FromBody] AddressUpsertRequestDto dto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var rows = await _addressRepo.UpsertAsync(userId, dto);
-
-                if (rows == 0)
-                    return StatusCode(500, new { error = "Failed to update address" });
-
-                await _repo.LogAuditAsync(userId, "Users.UpdateAddress", "Address updated", "User", userId.ToString(), GetClientIp());
-
-                var address = await _addressRepo.GetByOwnerAsync(userId);
-                return Ok(address);
-            }
-            catch (SqlException ex)
-            {
-                return StatusCode(500, new { error = $"Database error: {ex.Message}" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
-        }
-
-        [HttpPost("address/update")]
-        public async Task<IActionResult> UpdateAddressPost([FromBody] AddressUpsertRequestDto dto)
-        {
-            // Same implementation as PUT
-            return await UpdateAddress(dto);
-        }
-
         private string? GetClientIp()
         {
             return HttpContext.Connection.RemoteIpAddress?.ToString();
         }
     }
 }
-

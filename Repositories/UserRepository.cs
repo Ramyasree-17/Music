@@ -132,10 +132,8 @@ namespace TunewaveAPIDB1.Repositories
             return Convert.ToInt32(result) > 0;
         }
 
-        public async Task<UserEntitiesResponseDto> GetUserEntitiesAsync(int userId)
+        public async Task<object> GetUserEntitiesAsync(int userId)
         {
-            var response = new UserEntitiesResponseDto();
-
             using var conn = new SqlConnection(_conn);
             await conn.OpenAsync();
 
@@ -150,14 +148,19 @@ namespace TunewaveAPIDB1.Repositories
 
             bool isSuperAdmin = string.Equals(userRole, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
 
-            // Enterprises
+            var enterprises = new List<object>();
+            var labels = new List<object>();
+            var artists = new List<object>();
+
+            // =====================================================
+            // ENTERPRISES
+            // =====================================================
             if (isSuperAdmin)
             {
                 // SuperAdmin sees all enterprises
                 using (var cmd = new SqlCommand(@"
                     SELECT e.EnterpriseID, e.EnterpriseName, 
-                           COALESCE(eur.Role, 'SuperAdmin') AS Role, 
-                           COALESCE(eur.IsDefault, 0) AS IsDefault
+                           COALESCE(eur.Role, 'SuperAdmin') AS Role
                     FROM Enterprises e
                     LEFT JOIN EnterpriseUserRoles eur ON e.EnterpriseID = eur.EnterpriseID AND eur.UserID = @UserId
                     WHERE e.IsDeleted = 0 OR e.IsDeleted IS NULL
@@ -167,12 +170,11 @@ namespace TunewaveAPIDB1.Repositories
                     using var reader = await cmd.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
                     {
-                        response.Enterprises.Add(new EnterpriseMembershipDto
+                        enterprises.Add(new
                         {
-                            EnterpriseId = Convert.ToInt32(reader["EnterpriseID"]),
-                            EnterpriseName = reader["EnterpriseName"]?.ToString() ?? string.Empty,
-                            Role = reader["Role"]?.ToString() ?? string.Empty,
-                            IsDefault = false // Will be set below
+                            enterpriseId = Convert.ToInt32(reader["EnterpriseID"]),
+                            enterpriseName = reader["EnterpriseName"]?.ToString() ?? string.Empty,
+                            role = reader["Role"]?.ToString() ?? string.Empty
                         });
                     }
                 }
@@ -181,40 +183,35 @@ namespace TunewaveAPIDB1.Repositories
             {
                 // Regular users see only enterprises they're associated with
                 using (var cmd = new SqlCommand(@"
-                    SELECT e.EnterpriseID, e.EnterpriseName, eur.Role, eur.IsDefault
+                    SELECT e.EnterpriseID, e.EnterpriseName, eur.Role
                     FROM EnterpriseUserRoles eur
                     INNER JOIN Enterprises e ON e.EnterpriseID = eur.EnterpriseID
                     WHERE eur.UserID = @UserId
-                    ORDER BY eur.IsDefault DESC, e.EnterpriseID ASC", conn))
+                    ORDER BY e.EnterpriseID ASC", conn))
                 {
                     cmd.Parameters.AddWithValue("@UserId", userId);
                     using var reader = await cmd.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
                     {
-                        response.Enterprises.Add(new EnterpriseMembershipDto
+                        enterprises.Add(new
                         {
-                            EnterpriseId = Convert.ToInt32(reader["EnterpriseID"]),
-                            EnterpriseName = reader["EnterpriseName"]?.ToString() ?? string.Empty,
-                            Role = reader["Role"]?.ToString() ?? string.Empty,
-                            IsDefault = false // Will be set below
+                            enterpriseId = Convert.ToInt32(reader["EnterpriseID"]),
+                            enterpriseName = reader["EnterpriseName"]?.ToString() ?? string.Empty,
+                            role = reader["Role"]?.ToString() ?? string.Empty
                         });
                     }
                 }
             }
-            // Set first enterprise as default if any exist
-            if (response.Enterprises.Count > 0)
-            {
-                response.Enterprises[0].IsDefault = true;
-            }
 
-            // Labels
+            // =====================================================
+            // LABELS
+            // =====================================================
             if (isSuperAdmin)
             {
                 // SuperAdmin sees all labels
                 using (var cmd = new SqlCommand(@"
                     SELECT l.LabelID, l.LabelName, l.PlanTypeId, 
-                           COALESCE(ulr.Role, 'SuperAdmin') AS Role, 
-                           COALESCE(ulr.IsDefault, 0) AS IsDefault
+                           COALESCE(ulr.Role, 'SuperAdmin') AS Role
                     FROM Labels l
                     LEFT JOIN UserLabelRoles ulr ON l.LabelID = ulr.LabelID AND ulr.UserID = @UserId
                     WHERE l.IsDeleted = 0 OR l.IsDeleted IS NULL
@@ -224,13 +221,12 @@ namespace TunewaveAPIDB1.Repositories
                     using var reader = await cmd.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
                     {
-                        response.Labels.Add(new LabelMembershipDtoExtended
+                        labels.Add(new
                         {
-                            LabelId = Convert.ToInt32(reader["LabelID"]),
-                            LabelName = reader["LabelName"]?.ToString() ?? string.Empty,
-                            Role = reader["Role"]?.ToString() ?? string.Empty,
-                            PlanType = ResolvePlanType(reader["PlanTypeId"]),
-                            IsDefault = false // Will be set below
+                            labelId = Convert.ToInt32(reader["LabelID"]),
+                            labelName = reader["LabelName"]?.ToString() ?? string.Empty,
+                            role = reader["Role"]?.ToString() ?? string.Empty,
+                            planType = ResolvePlanType(reader["PlanTypeId"])
                         });
                     }
                 }
@@ -239,60 +235,63 @@ namespace TunewaveAPIDB1.Repositories
             {
                 // Regular users see only labels they're associated with
                 using (var cmd = new SqlCommand(@"
-                    SELECT l.LabelID, l.LabelName, l.PlanTypeId, ulr.Role, ulr.IsDefault
+                    SELECT l.LabelID, l.LabelName, l.PlanTypeId, ulr.Role
                     FROM UserLabelRoles ulr
                     INNER JOIN Labels l ON l.LabelID = ulr.LabelID
                     WHERE ulr.UserID = @UserId
-                    ORDER BY ulr.IsDefault DESC, l.LabelID ASC", conn))
+                    ORDER BY l.LabelID ASC", conn))
                 {
                     cmd.Parameters.AddWithValue("@UserId", userId);
                     using var reader = await cmd.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
                     {
-                        response.Labels.Add(new LabelMembershipDtoExtended
+                        labels.Add(new
                         {
-                            LabelId = Convert.ToInt32(reader["LabelID"]),
-                            LabelName = reader["LabelName"]?.ToString() ?? string.Empty,
-                            Role = reader["Role"]?.ToString() ?? string.Empty,
-                            PlanType = ResolvePlanType(reader["PlanTypeId"]),
-                            IsDefault = false // Will be set below
+                            labelId = Convert.ToInt32(reader["LabelID"]),
+                            labelName = reader["LabelName"]?.ToString() ?? string.Empty,
+                            role = reader["Role"]?.ToString() ?? string.Empty,
+                            planType = ResolvePlanType(reader["PlanTypeId"])
                         });
                     }
                 }
             }
-            // Set first label as default if any exist
-            if (response.Labels.Count > 0)
-            {
-                response.Labels[0].IsDefault = true;
-            }
 
-            // Artists (claimed)
+            // =====================================================
+            // ARTISTS
+            // =====================================================
             using (var cmd = new SqlCommand(@"
-                SELECT ArtistID, StageName, IsDefaultForUser
-                FROM Artists
-                WHERE ClaimedUserId = @UserId
-                ORDER BY IsDefaultForUser DESC, ArtistID ASC", conn))
+                SELECT a.ArtistID, a.ArtistName AS StageName,
+                       CASE 
+                           WHEN a.ClaimedUserId = @UserId THEN 'Claimed'
+                           ELSE 'Member'
+                       END AS Role
+                FROM Artists a
+                WHERE a.ClaimedUserId = @UserId
+                   OR a.UserId = @UserId
+                ORDER BY a.ArtistID ASC", conn))
             {
                 cmd.Parameters.AddWithValue("@UserId", userId);
                 using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    response.Artists.Add(new ArtistMembershipDto
+                    artists.Add(new
                     {
-                        ArtistId = Convert.ToInt32(reader["ArtistID"]),
-                        ArtistName = reader["StageName"]?.ToString() ?? string.Empty,
-                        Role = "Claimed",
-                        IsDefault = false // Will be set below
+                        artistId = Convert.ToInt32(reader["ArtistID"]),
+                        stageName = reader["StageName"]?.ToString() ?? string.Empty,
+                        role = reader["Role"]?.ToString() ?? string.Empty
                     });
                 }
             }
-            // Set first artist as default if any exist
-            if (response.Artists.Count > 0)
-            {
-                response.Artists[0].IsDefault = true;
-            }
 
-            return response;
+            // =====================================================
+            // RETURN STRUCTURED RESPONSE
+            // =====================================================
+            return new
+            {
+                enterprises,
+                labels,
+                artists
+            };
         }
 
         public async Task<bool> UserHasAccessToEntityAsync(int userId, string entityType, int entityId)

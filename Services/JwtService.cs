@@ -17,7 +17,8 @@ public class JwtService
         UserRecord user,
         int? enterpriseId = null,
         int? labelId = null,
-        string? domain = null)
+        string? domain = null,
+        int? brandingId = null)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_cfg["Jwt:Key"]));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -38,6 +39,9 @@ public class JwtService
 
         if (!string.IsNullOrWhiteSpace(domain))
             claims.Add(new Claim("Domain", domain));
+
+        if (brandingId != null)
+            claims.Add(new Claim("BrandingId", brandingId.ToString()!));
 
         var token = new JwtSecurityToken(
             issuer: _cfg["Jwt:Issuer"],
